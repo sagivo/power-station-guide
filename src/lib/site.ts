@@ -1,7 +1,7 @@
 // Central site config. Domain: power-station-guide.pages.dev
 // (also update `SITE` in astro.config.mjs and public/robots.txt).
 export const SITE_NAME = "Power Station Guide";
-export const SITE_URL = "https://power-station-guide.pages.dev";
+export const SITE_URL = "https://power-station-guide-c45.pages.dev";
 export const SITE_TAGLINE = "Portable power station guides, comparisons, and calculators.";
 export const SITE_DESCRIPTION =
   "Independent guides to portable power stations: model comparisons, RV power sizers, solar pairing calculators, and generator-vs-battery cost breakdowns so you buy the right station the first time.";
