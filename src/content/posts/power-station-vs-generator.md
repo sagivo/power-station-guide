@@ -68,3 +68,11 @@ A portable generator runs 70–80 dB — a loud vacuum cleaner, all night, with 
 - **Serious preparedness:** both. The station handles 90% of outage hours silently; the generator recharges the station and covers the worst 10%.
 
 Our station picks for this job: the [Anker SOLIX F3800](amazon:anker-solix-f3800) for 6000W of split-phase muscle, or the [EcoFlow DELTA Pro 3](amazon:ecoflow-delta-pro-3) for the fastest solar recharge in its class.
+
+## The noise ordinance angle nobody mentions
+
+Many HOAs and municipalities restrict generator operation to daytime hours or ban them outright during quiet hours — precisely when you most want power (overnight fridge, CPAP, heat). A power station sidesteps every one of these rules: no combustion, no exhaust, nothing for a neighbor to complain about at 3 AM. If you live somewhere with strict noise rules, the "generator is cheaper" math quietly stops applying.
+
+## Sizing it right
+
+The generator-vs-station decision starts with your loads, not the machines. Work through [what size power station you need](/posts/what-size-power-station/) first, then map the answer onto [real outage scenarios](/posts/home-backup-outage-scenarios/) — a surprising number of households discover their actual outage profile (short, overnight, electronics-heavy) is the one scenario where batteries win outright.
