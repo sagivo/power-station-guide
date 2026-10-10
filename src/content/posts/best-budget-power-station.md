@@ -60,3 +60,19 @@ A few years ago, "budget power station" meant a heavy NMC box with a weak invert
 | UPS | 20ms | 10ms |
 
 The extra $500 buys *watts and growth*, not capacity. If your loads fit 1800W and you won't expand, pocket the difference.
+
+## What to check before buying budget
+
+Price is only half the value equation. Verify these four things, in order:
+
+**1. LiFePO4 chemistry, non-negotiable.** Older NMC batteries degrade after 500–800 cycles; LiFePO4 is rated 3,000–4,000+ cycles — roughly 10 years of weekly use. Every pick above is LiFePO4. If a deal looks too good, check the chemistry first.
+
+**2. A real MPPT solar controller.** Some budget units cheap out with PWM controllers that waste 20–30% of panel output. All four picks have proper MPPT — pair them using our [solar panel pairing guide](/posts/solar-panel-pairing-guide/).
+
+**3. Pure sine wave output.** Modified sine wave can damage sensitive electronics and makes motors run hot. All four picks are pure sine — but no-name Amazon brands sometimes aren't, so check the spec sheet.
+
+**4. Expandability.** The [DELTA 3 Plus](amazon:ecoflow-delta-3-plus) grows to 5.1kWh and the [Jackery 1000 Plus](amazon:jackery-explorer-1000-plus) to 5kWh with add-on batteries. Buying a slightly smaller unit that can grow beats replacing a dead-end box in two years.
+
+## When to spend more than $1,000
+
+Step up when any of these are true: you need to run a full-size fridge through a 24-hour outage (that's the 2kWh class — see [what size power station you need](/posts/what-size-power-station/)), you want 2400W+ for power tools or cooking, or you need multi-day autonomy (which means solar too, not just a bigger battery). Otherwise, the budget tier genuinely covers camping, tailgating, short outages and device charging — the jobs most people actually buy these for.
