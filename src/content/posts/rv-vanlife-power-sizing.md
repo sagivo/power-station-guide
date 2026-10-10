@@ -62,3 +62,17 @@ Rooftop air conditioning is the load that breaks portable math: ~1,500W running,
 ## Don't guess — calculate
 
 Loads vary wildly by fridge size, climate and habits. Our [RV power sizer](/tools/rv-sizer/) lets you check off your actual devices and get matched stations in about 30 seconds.
+
+## Recharging on the road: the three speeds
+
+**Slow (free): 12V car outlet, ~100W.** Fine for topping up a 1kWh station over a long driving day. Useless for 2kWh+ — the math doesn't work.
+
+**Fast (installed): DC-DC alternator charger, 500–800W.** The vanlife standard: charges while you drive, a 2kWh station refills in 3–4 hours of highway time. Needs wiring and usually a professional install, but it's the closest thing to "free energy" that exists.
+
+**Free (parked): solar, 200–1200W depending on roof.** The only recharge that works when you're stationary for days. Size it with our [solar pairing guide](/posts/solar-panel-pairing-guide/) — and remember panels make ~75% of label in real conditions.
+
+Most experienced vanlifers run alternator + solar together: drive-days refill the battery, solar stretches it between drives.
+
+## Cold weather derating
+
+LiFePO4 batteries don't like charging below freezing (32°F/0°C) — good stations refuse or heat first, cheap ones degrade. In winter: keep the station inside the heated living space, not an uninsulated garage bay; expect 10–20% less usable capacity in the cold; and don't leave it at 100% for weeks unused — 50–80% is the happy storage zone. If you winter camp regularly, this matters more than brand choice. For the general sizing method behind all these numbers, see [what size power station you need](/posts/what-size-power-station/).
