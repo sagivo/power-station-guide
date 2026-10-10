@@ -66,6 +66,24 @@ Heat, imperfect angle, haze, dust and cable losses all cut output. A "400W" pane
 - **Camping/portable:** folding panels from the station's own brand (EcoFlow, Jackery SolarSaga, Anker) — plug-and-play connectors, 100–400W.
 - **Budget flexible:** the [BLUETTI AC200L](amazon:bluetti-ac200l) accepts almost anything thanks to its 12–145V range.
 
+## Series vs parallel: wiring panels without the magic smoke
+
+Two ways to connect multiple panels, and the choice matters:
+
+**Series** (positive to negative, daisy-chained): voltages add, current stays the same. Two 40Voc panels = 80Voc into the station. More efficient over long cable runs — but if one panel is shaded, the whole string drops, and you must stay under the station's max input voltage (cold mornings push Voc ~10% above label).
+
+**Parallel** (all positives together): current adds, voltage stays at one panel's Voc. Shade-tolerant and voltage-safe, but needs thicker cables and combiner hardware for big arrays.
+
+**The rule:** rooftop/home arrays usually go series (fewer cables, better efficiency) after verifying cold-weather Voc stays under the station's limit. Portable/camping setups usually go parallel (shade happens). When in doubt, parallel is the safer mistake — it wastes a little efficiency instead of risking the controller.
+
+## Cables and adapters: the unglamorous essentials
+
+- **MC4 to station plug:** most stations don't use MC4 natively — EcoFlow uses XT60, Anker uses its own barrel, Jackery has proprietary inputs. Budget $15–30 for the adapter cable and buy the station brand's own; pinouts vary.
+- **Extension cable gauge:** for runs over 25 feet, use 10 AWG. Thin cables at high current quietly eat 5–10% of your array.
+- **No diodes needed** for a single string into an MPPT controller — the controller handles it.
+
+For the sizing math that tells you how many watts to buy in the first place, see [what size power station you need](/posts/what-size-power-station/) and our [home backup scenarios](/posts/home-backup-outage-scenarios/).
+
 ## The one-day refill rule
 
 Size the array so one good solar day refills a day's use: array watts ≈ daily Wh ÷ (sun hours × 0.75). A 2kWh daily load with 5 sun hours needs ~550W minimum; 800–1000W gives cloudy-day margin. Then check it against the station's cap — if the cap is lower, you've found your real limit (and possibly the wrong station).
