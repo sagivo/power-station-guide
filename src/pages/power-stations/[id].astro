@@ -8,7 +8,7 @@ import { AFFILIATE_REL, amazonLink, tagAmazonUrl } from "../../lib/amazon";
 import ProductCard from "../../components/ProductCard.astro";
 import PostCard from "../../components/PostCard.astro";
 import StickyCta from "../../components/StickyCta.astro";
-import { MODELS, formatWh, type StationModel } from "../../data/models";
+import { MODELS, formatWh, priceTier, type StationModel } from "../../data/models";
 import PriceTier from "../../components/PriceTier.astro";
 import { SITE_NAME, SITE_URL } from "../../lib/site";
 import { getPosts } from "../../lib/posts";
@@ -70,77 +70,170 @@ const specs: [string, string][] = [
   ["Max solar input", `${m.solarInputW.toLocaleString("en-US")}W`],
   ["AC recharge", m.rechargeTime],
   ["Weight", `${m.weightLb} lb`],
-  ...(m.expandableWh ? [["Expandable to", formatWh(m.expandableWh)] as [string, string]] : []),
-  ...(m.upsMs ? [["UPS switchover", `${m.upsMs}ms`] as [string, string]] : []),
+  ...(m.expandableWh ? ([["Expandable to", formatWh(m.expandableWh)]] as [string, string][]) : []),
+  ...(m.upsMs ? ([["UPS switchover", `${m.upsMs}ms`]] as [string, string][]) : []),
+  ["Price tier", `${priceTier(m).sym} ${priceTier(m).label} (${priceTier(m).range}). See Amazon for today's price.`],
 ];
+// Bars scaled against the largest figure in our database (honest relative comparison).
+const maxCap = Math.max(...MODELS.map((x) => x.capacityWh));
+const maxOut = Math.max(...MODELS.map((x) => x.outputW));
+const maxSol = Math.max(...MODELS.map((x) => x.solarInputW));
+const bars: [string, string, number][] = [
+  ["Capacity", formatWh(m.capacityWh), (m.capacityWh / maxCap) * 100],
+  ["Output", `${m.outputW.toLocaleString("en-US")}W`, (m.outputW / maxOut) * 100],
+  ["Solar input", `${m.solarInputW.toLocaleString("en-US")}W`, (m.solarInputW / maxSol) * 100],
+];
+const tierLabel = m.tier === "budget" ? "Budget" : m.tier === "mid" ? "Mid-range" : "Premium";
 ---
 
-<BaseLayout title={title} description={description} canonical={url} ogImage={ogImage} jsonLd={jsonLd}>
-  <div class="wrap">
+<BaseLayout title={title} description={description} canonical={url} ogImage={ogImage} jsonLd={jsonLd} hidePromo>
+  <div class="wrap post-wrap">
     <Breadcrumbs crumbs={crumbs} />
-    <article class="review">
-      <header class="review-head">
-        <div class="rh-media"><ProductImage model={m} size={220} eager /></div>
-        <div class="rh-main">
-          <p class="kicker">{m.brand} · {formatWh(m.capacityWh)} · {m.outputW.toLocaleString("en-US")}W</p>
-          <h1>{m.name}: full review</h1>
-          <p class="lede">{m.verdict}</p>
-          <p class="best-for"><strong>Best for:</strong> {m.bestFor}</p>
-          <div class="rh-actions">
-            <BuyButton model={m} size="lg" />
-            <span class="rh-price"><PriceTier model={m} /></span>
-          </div>
-          <p class="updated">Specs verified against manufacturer and retailer listings · Updated {fmtDate(updated)}</p>
+
+    <div data-pagefind-body>
+    <header class="review-hero">
+      <div class="rh-art">
+        <ProductImage model={m} size={300} eager />
+      </div>
+      <div class="rh-body">
+        <span class="post-tag">{m.brand} · {tierLabel}</span>
+        <h1>{m.name} Review</h1>
+        <p class="rh-best">{m.bestFor}</p>
+        <ul class="chips rh-chips" aria-label="Key specs">
+          <li>{formatWh(m.capacityWh)}</li>
+          <li>{m.outputW.toLocaleString("en-US")}W output</li>
+          <li>{m.solarInputW.toLocaleString("en-US")}W solar</li>
+          {m.expandableWh && <li class="hi">Expandable</li>}
+        </ul>
+        <div class="rh-meta">
+          <span class="rh-price"><PriceTier model={m} /><small>price tier · see Amazon for today's price</small></span>
         </div>
-      </header>
-
-      {Body && <div class="prose"><Body /></div>}
-
-      <section class="specs" aria-label="Specifications">
-        <h2>Specifications</h2>
-        <dl class="spec-table">
-          {specs.map(([k, v]) => (
-            <div class="spec-row"><dt>{k}</dt><dd>{v}</dd></div>
-          ))}
-        </dl>
-        {m.specNotes && (
-          <ul class="spec-notes">
-            {m.specNotes.map((n) => <li>{n}</li>)}
-          </ul>
-        )}
-        <p class="fineprint">
-          Specs and street prices compiled October 2026 from manufacturer pages and dated retailer
-          listings — prices move weekly, so <a href={tagAmazonUrl(amazonLink(m.query, m.asin))} rel={AFFILIATE_REL} target="_blank">check the current price on Amazon</a> before buying.
+        <div class="rh-buy">
+          <BuyButton model={m} size="lg" />
+          <a class="btn ghost" href="#alternatives">See alternatives</a>
+        </div>
+        <p class="buy-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z" fill="currentColor"/></svg>
+          Opens Amazon in a new tab. Our recommendations are never influenced by commissions.
         </p>
-      </section>
+        <p class="byline">
+          By <a href="/about/">{SITE_NAME} Editorial Team</a> ·
+          <time datetime={updated.toISOString()}>Updated {fmtDate(updated)}</time> ·
+          <a href="/how-we-research/">How we research</a>
+        </p>
+      </div>
+    </header>
 
-      <section class="proscons" aria-label="Pros and cons">
-        <div class="pc-col">
-          <h2>What we like</h2>
-          <ul class="pros">{m.pros.map((p) => <li>{p}</li>)}</ul>
-        </div>
-        <div class="pc-col">
-          <h2>What to watch</h2>
-          <ul class="cons">{m.cons.map((c) => <li>{c}</li>)}</ul>
-        </div>
-      </section>
+    <div class="affiliate-note">
+      We may earn a commission when you buy through links on this page, at no extra cost to you.
+      Our findings come from manufacturer specs, professional reviews, and owner reports. They are not
+      hands-on lab tests.
+    </div>
 
-      <section aria-label="Alternatives">
-        <div class="section-head"><h2 class="section-title">Alternatives to consider</h2></div>
-        <div class="card-grid">
-          {alternatives.map((a) => <ProductCard model={a} compact />)}
+    <section class="review-grid">
+      <div class="verdict-box">
+        <h2>The verdict</h2>
+        <p>{m.verdict}</p>
+        <div class="pc-proscons big">
+          <div>
+            <h3>What we like</h3>
+            <ul class="pros">{m.pros.map((p) => <li>{p}</li>)}</ul>
+          </div>
+          <div>
+            <h3>Watch out for</h3>
+            <ul class="cons">{m.cons.map((c) => <li>{c}</li>)}</ul>
+          </div>
         </div>
-      </section>
+      </div>
+      <div class="score-box">
+        <h2>How it stacks up</h2>
+        {bars.map(([k, display, pct]) => (
+          <div class="bar">
+            <span>{k}</span>
+            <div class="bar-track"><div class="bar-fill" style={`width:${pct.toFixed(1)}%`}></div></div>
+            <strong>{display}</strong>
+          </div>
+        ))}
+        <p class="score-note">Bars scaled against the largest figure in our database of {MODELS.length} stations.</p>
+      </div>
+    </section>
+
+    <article class="prose">
+      <h2 id="specs">{m.shortName} specs</h2>
+      <table class="spec-table">
+        <tbody>
+          {specs.map(([k, v]) => <tr><th scope="row">{k}</th><td>{v}</td></tr>)}
+        </tbody>
+      </table>
+      {m.specNotes?.length ? <ul class="spec-notes">{m.specNotes.map((n) => <li>{n}</li>)}</ul> : null}
+      <p class="fine">Specs and street prices compiled October 2026 from manufacturer pages and dated retailer listings — prices move weekly, so confirm on the retailer page before buying.</p>
+
+      {Body && <Body />}
+
+      <div class="inline-cta">
+        <div>
+          <small>Ready to buy?</small>
+          <strong>{m.name}</strong>
+          <span><PriceTier model={m} /> · {formatWh(m.capacityWh)} · {m.outputW.toLocaleString("en-US")}W output</span>
+        </div>
+        <BuyButton model={m} />
+      </div>
 
       {mentionedIn.length > 0 && (
-        <section aria-label="Mentioned in guides">
-          <div class="section-head"><h2 class="section-title">Featured in our guides</h2></div>
-          <div class="post-grid">{mentionedIn.map((p) => <PostCard post={p} />)}</div>
-        </section>
+        <>
+          <h2 id="featured-in">Featured in our guides</h2>
+          <ul>{mentionedIn.map((p) => <li><a href={`/posts/${p.id}/`}>{p.data.title}</a></li>)}</ul>
+        </>
       )}
 
-      <p class="back-link"><a href="/power-stations/">← Compare all {MODELS.length} power stations</a></p>
+      {review?.data.faq?.length ? (
+        <section class="faq" id="faq" aria-label="Frequently asked questions">
+          <h2>{m.shortName} FAQ</h2>
+          {review.data.faq.map((f) => (
+            <details>
+              <summary>{f.q}</summary>
+              <div>{f.a}</div>
+            </details>
+          ))}
+        </section>
+      ) : null}
+
+      {m.sources.length > 0 && (
+        <>
+          <h2 id="sources">Sources</h2>
+          <ul class="sources">
+            {m.sources.map((s) => {
+              const host = (s.match(/[a-z0-9-]+(\.[a-z0-9-]+)+/i) || [])[0];
+              if (!host) return <li>{s}</li>;
+              const href = `https://${host}/`;
+              const isAmazon = /^https?:\/\/(www\.)?amazon\.com\//.test(href);
+              return <li><a href={isAmazon ? tagAmazonUrl(href) : href} rel={isAmazon ? AFFILIATE_REL : "noopener nofollow"} target="_blank">{host.replace(/^www\./, "")}</a></li>;
+            })}
+          </ul>
+        </>
+      )}
     </article>
+
+    </div>
+    <section id="alternatives" aria-label="Alternatives">
+      <div class="section-head alt-head">
+        <div>
+          <span class="eyebrow">Not sold yet?</span>
+          <h2 class="section-title">Alternatives to the {m.shortName}</h2>
+        </div>
+      </div>
+      <div class="tp-grid alt-grid swipe">
+        {alternatives.map((a) => <ProductCard model={a} compact />)}
+      </div>
+      <p style="margin-top:1.25rem;"><a class="section-link" href="/power-stations/">Compare all {MODELS.length} models →</a></p>
+    </section>
+
+    {posts.length > 0 && (
+      <section class="related" aria-label="Buying guides">
+        <h2 class="section-title">Helpful guides</h2>
+        <div class="post-grid">{posts.filter((p) => p.data.category === "best").slice(0, 3).map((p) => <PostCard post={p} />)}</div>
+      </section>
+    )}
   </div>
-  <StickyCta model={m} label="Our verdict" />
+  <StickyCta model={m} />
 </BaseLayout>

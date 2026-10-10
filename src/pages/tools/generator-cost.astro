@@ -2,28 +2,62 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { MODELS } from "../../data/models";
 import { amazonLink } from "../../lib/amazon";
-import { SITE_URL } from "../../lib/site";
+import { SITE_NAME, SITE_URL } from "../../lib/site";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import Visual from "../../components/Visual.astro";
 import { breadcrumbLd } from "../../lib/schema";
 
-const title = "Power Station vs Gas Generator: 5-Year Cost Calculator";
+const title = "Power Station vs Generator: 5-Year Cost Calculator";
 const description =
-  "Compare the true 5-year cost of a portable power station vs a gas generator for backup power: fuel, maintenance, and upfront cost side by side.";
+  "Compare the true 5-year cost of a portable power station against a gas standby or portable generator: fuel, oil, maintenance, and replacement included.";
 const url = `${SITE_URL}/tools/generator-cost/`;
 
 const crumbs = [
   { name: "Home", href: "/" },
   { name: "Tools", href: "/tools/" },
-  { name: "Station vs generator cost", href: "/tools/generator-cost/" },
+  { name: "Generator cost comparison", href: "/tools/generator-cost/" },
 ];
-const jsonLd = [breadcrumbLd(crumbs)];
+const jsonLd = [
+  breadcrumbLd(crumbs),
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Power Station vs Generator Cost Calculator",
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Any",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    url,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Is a portable power station cheaper than a generator?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "For occasional outages it often is: no fuel, no oil changes, no maintenance visits. A gas generator looks cheaper upfront but its fuel and upkeep add up over 5 years, especially with frequent or long outages.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How long do portable power stations last?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "LiFePO4 stations are typically rated for 3,000-4,000+ charge cycles to 80% capacity — a decade or more of occasional outage use. Gas generators need oil, filters, and exercise runs on a schedule regardless of use.",
+        },
+      },
+    ],
+  },
+];
 
 const modelsJson = JSON.stringify(
   MODELS.map((m) => ({
-    id: m.id, name: m.name, shortName: m.shortName,
-    capacityWh: m.capacityWh, priceLow: m.priceLow,
+    id: m.id, name: m.name, capacityWh: m.capacityWh, outputW: m.outputW,
+    priceLow: m.priceLow, priceHigh: m.priceHigh,
     link: amazonLink(m.query, m.asin),
-  }))
+  })).sort((a, b) => a.capacityWh - b.capacityWh)
 );
 ---
 
@@ -31,117 +65,108 @@ const modelsJson = JSON.stringify(
   <div class="wrap">
     <Breadcrumbs crumbs={crumbs} />
     <div class="calc-hero">
-      <h1>Power station vs gas generator: 5-year cost</h1>
+      <h1>Power station vs generator: 5-year cost</h1>
       <p>
-        A gas generator is cheaper to buy and burns money to run. A power station costs more
-        upfront and nearly nothing to run. Set your outage hours and fuel price — we'll do the
-        5-year math.
+        A gas generator looks cheaper on the shelf — then you buy fuel, oil, and
+        maintenance for five years. Enter your outage pattern and see the real total
+        next to a comparable power station.
       </p>
     </div>
 
     <div class="calc" id="cost-calc">
-      <div class="calc-controls">
-        <label for="model">Power station
-          <select id="model">
-            {MODELS.filter((m) => m.capacityWh >= 2000).map((m) => (
-              <option value={m.id} selected={m.id === "anker-solix-f3800"}>{m.name} — ~${m.priceLow.toLocaleString()}</option>
+      <div class="row">
+        <div>
+          <label for="station">Power station</label>
+          <select id="station">
+            {MODELS.map((m) => (
+              <option value={m.id}>{m.name} — ~${m.priceLow.toLocaleString("en-US")}–${m.priceHigh.toLocaleString("en-US")}</option>
             ))}
           </select>
-        </label>
-        <label for="hours">Backup hours needed per year <output id="hours-out">120h</output></label>
-        <input id="hours" type="range" min="12" max="600" step="12" value="120" />
-        <label for="genprice">Gas generator purchase price <output id="genprice-out">$900</output></label>
-        <input id="genprice" type="range" min="300" max="2500" step="50" value="900" />
-        <label for="fueluse">Generator fuel use <output id="fueluse-out">0.75 gal/hr</output></label>
-        <input id="fueluse" type="range" min="0.3" max="1.5" step="0.05" value="0.75" />
-        <label for="gasprice">Gas price <output id="gasprice-out">$3.50/gal</output></label>
-        <input id="gasprice" type="range" min="2.5" max="6" step="0.1" value="3.5" />
-        <label for="solar">Share of station recharging from solar <output id="solar-out">50%</output></label>
-        <input id="solar" type="range" min="0" max="100" step="10" value="50" />
-      </div>
-
-      <div class="calc-results">
-        <div class="result-cards">
-          <div class="result-card">
-            <span class="rc-label">Gas generator, 5 years</span>
-            <strong id="gen-total">–</strong>
-            <small id="gen-breakdown"></small>
-          </div>
-          <div class="result-card">
-            <span class="rc-label">Power station, 5 years</span>
-            <strong id="st-total">–</strong>
-            <small id="st-breakdown"></small>
-          </div>
-          <div class="result-card hot">
-            <span class="rc-label">5-year difference</span>
-            <strong id="diff">–</strong>
-            <small id="diff-note"></small>
-          </div>
         </div>
-        <p class="fineprint">
-          Generator maintenance (~$60/yr oil, filters, plug) is included. Station "fuel" is grid
-          electricity at $0.17/kWh for the non-solar share. Not included: the generator's noise,
-          fumes, and the fact it can't run indoors or while you sleep — or the station's silence.
-          Read the full <a href="/posts/power-station-vs-generator/">station vs generator breakdown</a>.
-        </p>
+        <div>
+          <label for="genprice">Comparable gas generator price <output id="genprice-out">$900</output></label>
+          <input id="genprice" type="range" min="300" max="3000" step="50" value="900" />
+        </div>
       </div>
+      <div class="row">
+        <div>
+          <label for="outages">Outage hours per year <output id="outages-out">48 h</output></label>
+          <input id="outages" type="range" min="0" max="300" step="12" value="48" />
+        </div>
+        <div>
+          <label for="fuel">Gasoline price <output id="fuel-out">$3.50/gal</output></label>
+          <input id="fuel" type="range" min="2.5" max="6" step="0.1" value="3.5" />
+        </div>
+      </div>
+      <p style="margin-top:1.5rem;"><button class="btn" id="cost-btn" type="button">Compare 5-year cost ⚡</button></p>
+      <div class="calc-result" id="cost-result" aria-live="polite"></div>
     </div>
 
-    <section class="faq" aria-label="Frequently asked questions">
-      <h2>Station vs generator questions</h2>
-      <details><summary>Is a power station cheaper than a gas generator?</summary>
-        <p>Over 5 years, usually yes for moderate outage hours — fuel is the great equalizer. A generator burning 0.75 gal/hr at $3.50/gal costs ~$2.60/hr just in fuel; 120 outage hours a year is $1,575 in fuel alone over 5 years, before maintenance.</p>
-      </details>
-      <details><summary>When does a gas generator still win?</summary>
-        <p>Very long outages (days), very high loads (whole-home AC, well pumps running constantly), and places where you can't recharge a station. Generators also win on upfront cost if outages are rare — under ~40 hours/year, the fuel math rarely catches up.</p>
-      </details>
-      <details><summary>Can I use both?</summary>
-        <p>It's the best of both worlds for serious preparedness: the station handles nights, electronics and short outages silently; the generator recharges the station (or runs heavy loads) during long ones. Many owners do exactly this.</p>
-      </details>
-    </section>
+    <article class="prose" data-pagefind-body>
+      <h2>What the math includes</h2>
+      <p>
+        Gas generators burn roughly 0.75 gal/hour under moderate load, plus about
+        $60/year in oil, filters, and spark plugs, and a $300 replacement budget
+        across five years for wear parts. Power stations cost electricity to recharge
+        (about $0.17/kWh) and nothing else — no oil, no filters, no exercise runs.
+      </p>
+      <p>
+        For the full breakdown of noise, fumes, and maintenance differences, read our
+        <a href="/posts/power-station-vs-generator/">power station vs standby generator</a> guide.
+      </p>
+    </article>
   </div>
 
-  <script define:vars={{ modelsJson }}>
+  <script define:vars={{ modelsJson, siteName: SITE_NAME }}>
     const MODELS = JSON.parse(modelsJson);
     const $ = (id) => document.getElementById(id);
-    const els = ["model", "hours", "genprice", "fueluse", "gasprice", "solar"].map($);
+    const genprice = $("genprice"), outages = $("outages"), fuel = $("fuel"), station = $("station");
 
-    function compute() {
-      const m = MODELS.find((x) => x.id === $("model").value);
-      const hours = parseFloat($("hours").value);
-      const genPrice = parseFloat($("genprice").value);
-      const fuelUse = parseFloat($("fueluse").value);
-      const gasPrice = parseFloat($("gasprice").value);
-      const solarShare = parseFloat($("solar").value) / 100;
-
-      $("hours-out").textContent = hours + "h";
-      $("genprice-out").textContent = "$" + genPrice.toLocaleString();
-      $("fueluse-out").textContent = fuelUse.toFixed(2) + " gal/hr";
-      $("gasprice-out").textContent = "$" + gasPrice.toFixed(2) + "/gal";
-      $("solar-out").textContent = Math.round(solarShare * 100) + "%";
-
-      const genFuel5 = hours * 5 * fuelUse * gasPrice;
-      const genMaint5 = 60 * 5;
-      const genTotal = genPrice + genFuel5 + genMaint5;
-
-      // Station: cycles per year = hours*his avg load / capacity; simplify: energy throughput
-      const kwhPerYear = hours * (m.capacityWh / 1000) * 0.8; // 0.8 = avg depth of discharge
-      const gridKwh5 = kwhPerYear * 5 * (1 - solarShare);
-      const stTotal = m.priceLow + gridKwh5 * 0.17;
-
-      const money = (n) => "$" + Math.round(n).toLocaleString();
-      $("gen-total").textContent = money(genTotal);
-      $("gen-breakdown").textContent = `fuel ${money(genFuel5)} + maint. ${money(genMaint5)}`;
-      $("st-total").textContent = money(stTotal);
-      $("st-breakdown").textContent = `unit ~${money(m.priceLow)} + grid charging ${money(gridKwh5 * 0.17)}`;
-
-      const diff = genTotal - stTotal;
-      $("diff").textContent = (diff >= 0 ? "Station saves " : "Generator saves ") + money(Math.abs(diff));
-      $("diff-note").textContent = diff >= 0
-        ? "over 5 years — before counting silence and indoor use"
-        : "over 5 years — but you still deal with fuel, noise and fumes";
+    function paint(el) {
+      const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+      el.style.setProperty("--fill", pct + "%");
     }
-    els.forEach((el) => el.addEventListener("input", compute));
-    compute();
+    function fmt(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
+
+    function sync() {
+      [genprice, outages, fuel].forEach(paint);
+      $("genprice-out").textContent = fmt(genprice.value);
+      $("outages-out").textContent = outages.value + " h";
+      $("fuel-out").textContent = "$" + parseFloat(fuel.value).toFixed(2) + "/gal";
+    }
+    [genprice, outages, fuel].forEach((el) => el.addEventListener("input", sync));
+    sync();
+
+    $("cost-btn").addEventListener("click", () => {
+      const m = MODELS.find((x) => x.id === station.value);
+      const years = 5;
+      const hrs = parseFloat(outages.value), gas = parseFloat(fuel.value);
+      const genUpfront = parseFloat(genprice.value);
+      // Gas: ~0.75 gal/h moderate load + $60/yr maintenance + $300 wear parts over 5yr.
+      const genFuel = hrs * 0.75 * gas * years;
+      const genMaint = 60 * years + 300;
+      const genTotal = genUpfront + genFuel + genMaint;
+      // Station: mid-range of typical price + recharge electricity at $0.17/kWh.
+      const stUpfront = (m.priceLow + m.priceHigh) / 2;
+      const cycles = (m.capacityWh / 1000) * (hrs / 24) * years; // rough full-cycle equivalents
+      const stEnergy = cycles * 0.17;
+      const stTotal = stUpfront + stEnergy;
+      const winner = stTotal < genTotal ? "station" : "generator";
+      const result = $("cost-result");
+      result.innerHTML = `
+        <h3>The ${winner === "station" ? m.name : "gas generator"} wins on 5-year cost</h3>
+        <table class="compat-table">
+          <tr><td>Upfront</td><td><strong>${fmt(stUpfront)}</strong> station</td><td><strong>${fmt(genUpfront)}</strong> generator</td></tr>
+          <tr><td>5-yr fuel &amp; energy</td><td><strong>${fmt(stEnergy)}</strong></td><td><strong>${fmt(genFuel)}</strong></td></tr>
+          <tr><td>5-yr maintenance</td><td><strong>$0</strong></td><td><strong>${fmt(genMaint)}</strong></td></tr>
+          <tr><td><strong>5-year total</strong></td><td><strong style="font-size:1.2rem;">${fmt(stTotal)}</strong></td><td><strong style="font-size:1.2rem;">${fmt(genTotal)}</strong></td></tr>
+        </table>
+        <p style="font-size:.87rem;">${winner === "station"
+          ? "The station's higher sticker price is erased by zero fuel and maintenance. It also runs silent indoors with no fumes."
+          : "With this much runtime, cheap gasoline beats the station's upfront cost. But the generator is loud, needs oil changes, and can't run indoors."}</p>
+        <p class="disclosure">As an Amazon Associate ${siteName} earns from qualifying purchases. Check Amazon for today's price.</p>`;
+      result.classList.add("show");
+      result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
   </script>
 </BaseLayout>

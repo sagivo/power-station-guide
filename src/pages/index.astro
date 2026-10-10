@@ -92,8 +92,7 @@ const jsonLd = [websiteLd(), itemListLd("Top portable power stations of 2026", p
         <div class="sp-body">
           <h2 class="sp-name"><a href={`/power-stations/${top.id}/`}>{top.name}</a></h2>
           <div class="sp-meta">
-            <span class="ring" style="--v:80"><span>{formatWh(top.capacityWh)}</span></span>
-            <span class="ring-label"><strong>{top.outputW.toLocaleString("en-US")}W</strong>continuous output</span>
+            <span class="ring-label"><strong>{formatWh(top.capacityWh)} · {top.outputW.toLocaleString("en-US")}W</strong>capacity · continuous output</span>
             <span class="sp-price"><PriceTier model={top} label={false} /><small>{priceTier(top).label} price tier</small></span>
           </div>
           <ul class="sp-points">{top.pros.slice(0, 3).map((p) => <li>{p}</li>)}</ul>

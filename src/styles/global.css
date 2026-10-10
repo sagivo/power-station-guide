@@ -1,23 +1,23 @@
-/* Power Station Guide design system — "volt" theme.
-   Dark slate + volt yellow brand, cool paper background, and one loud
+/* Robot Lawn Mower Guide design system — "striped lawn" theme.
+   Dark forest + electric lime brand, warm paper background, and one loud
    buy colour (amber) reserved for Amazon links so the money buttons always
    stand out. */
 :root {
-  --paper: #f3f4ef;
-  --paper-2: #e9ebe1;
+  --paper: #f6f4ec;
+  --paper-2: #eeeadc;
   --card: #ffffff;
-  --ink: #10151c;
-  --ink-2: #2b333e;
-  --muted: #5d6672;
-  --line: #dfe2d4;
-  --line-2: #cfd3c0;
-  --forest: #0d1420;
-  --forest-2: #14202f;
-  --forest-3: #1d2f45;
-  --leaf: #4d7c0f;
-  --leaf-2: #65a30d;
-  --lime: #d9f731;
-  --lime-2: #f0fbb8;
+  --ink: #0b1a10;
+  --ink-2: #2b3a30;
+  --muted: #5d6a60;
+  --line: #e2ddcd;
+  --line-2: #d3cdb9;
+  --forest: #0c2215;
+  --forest-2: #12321e;
+  --forest-3: #1a4529;
+  --leaf: #1d7a3a;
+  --leaf-2: #2f9e4c;
+  --lime: #c8f03c;
+  --lime-2: #e8fab0;
   --buy: #ffc21a;
   --buy-hi: #ffd34f;
   --hot: #ff6a3d;

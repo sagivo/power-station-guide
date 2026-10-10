@@ -68,6 +68,19 @@ export function outputChart(models: StationModel[] = MODELS): string {
   );
 }
 
+/** Max solar input: the ceiling that caps how fast panels can recharge each station. */
+export function solarInputChart(models: StationModel[] = MODELS): string {
+  const rows = [...models]
+    .sort((a, b) => b.solarInputW - a.solarInputW)
+    .map((m) => ({ label: m.shortName, value: m.solarInputW, display: `${m.solarInputW.toLocaleString("en-US")}W` }));
+  return figure(
+    "Max solar input compared",
+    "The most panel watts each station can use — extra panel goes unused",
+    barChart(rows, Math.max(...rows.map((r) => r.value)), MID, "watts"),
+    "Real-world panels deliver ~70% of their rating; pair your array to the station's ceiling."
+  );
+}
+
 /** Watt-hours per dollar: which stations give the most capacity for the money. */
 export function valueChart(models: StationModel[] = MODELS): string {
   const rows = [...models]
@@ -124,6 +137,7 @@ export const VISUALS: Record<string, () => string> = {
   "chart:capacity": () => capacityChart(),
   "chart:output": () => outputChart(),
   "chart:value": () => valueChart(),
+  "chart:solar-input": () => solarInputChart(),
   "diagram:backup": backupDiagram,
   "diagram:sizing": sizingDiagram,
 };
