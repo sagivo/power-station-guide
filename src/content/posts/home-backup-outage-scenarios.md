@@ -58,4 +58,12 @@ This is where most buyers land, and it's the 3kWh class: the [Anker SOLIX F3000]
 
 ## The 10ms rule
 
-If you work from home, put the modem, router and PC on a station with proper UPS switchover (10–20ms: [DELTA Pro 3](amazon:ecoflow-delta-pro-3), [C2000 Gen 2](amazon:anker-solix-c2000-gen2), [DELTA 3 Plus](amazon:ecoflow-delta-3-plus)). Your video calls survive the blackout without a flicker — a generator can't do that.
+If you work from home, put the modem, router and PC on a station with proper UPS switchover (10–20ms: [DELTA Pro 3](amazon:ecoflow-delta-pro-3), [C2000 Gen 2](amazon:anker-solix-c2000-gen2), [DELTA 3 Plus](amazon:ecoflow-delta-3-plus)). Your video calls survive the blackout without a flicker — a generator can't do that. For the full cost comparison, see [power station vs gas generator](/posts/power-station-vs-generator/) and run your own numbers in the [5-year cost calculator](/tools/generator-cost/).
+
+## Outage prep checklist (do this before storm season)
+
+1. **Size once, properly.** Walk through [what size power station you need](/posts/what-size-power-station/) with your actual loads — most people discover the fridge sizes the whole system.
+2. **Charge to 80–100% and leave it plugged in.** LiFePO4 self-discharges slowly, but a station at 40% is a nasty surprise. Top up monthly.
+3. **Pre-position cables.** Extension cord to the fridge, the CPAP's 12V adapter, a power strip for the "essentials corner." You don't want to hunt for these in the dark.
+4. **Know your breakers.** If you ever backfeed a panel (transfer switch only — never a suicide cord), label the essential circuits now.
+5. **Test the sump pump on battery.** Don't discover the surge trips your inverter during the storm that floods the basement.
