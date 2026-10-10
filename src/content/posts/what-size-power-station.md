@@ -63,3 +63,18 @@ Example — home office backup: laptop 65W × 8h = 520Wh, monitor 30W × 8h = 24
 | + cooking/Starlink (~3,000Wh) | 2–3kWh | [C2000 Gen 2](amazon:anker-solix-c2000-gen2) |
 | Fridge + freezer 24h (~3,200Wh) | 3kWh+ | [Anker F3000](amazon:anker-solix-f3000) |
 | Multi-day home backup | 4kWh + solar | [DELTA Pro 3](amazon:ecoflow-delta-pro-3) |
+
+## Sizing for specific appliances
+
+The table above is a starting point — here's the appliance-level math for the loads people actually ask about (using the 0.85 efficiency factor):
+
+| Appliance | Typical draw | 1kWh station | 2kWh station | 4kWh station |
+|---|---|---|---|---|
+| Full-size fridge | ~150W avg | ~6h | ~11h | ~23h |
+| Chest freezer | ~100W avg | ~8.5h | ~17h | ~34h |
+| CPAP (no humidifier) | ~40W × 8h | 2–3 nights | 5+ nights | 10+ nights |
+| Laptop + monitor | ~95W × 8h | ~1 workday | ~2 workdays | ~4 workdays |
+| Portable AC (8k BTU) | ~1000W | ~50 min | ~1.7h | ~3.4h |
+| Microwave | 1000W × 15min | ~4 meals | ~8 meals | ~16 meals |
+
+Two deep dives: [what size power station runs a refrigerator](/posts/what-size-power-station-to-run-a-refrigerator/) does the full fridge math including compressor surge, and [home backup scenarios](/posts/home-backup-outage-scenarios/) walks through 4-hour, 24-hour and multi-day outages hour by hour.
