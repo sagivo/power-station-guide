@@ -1,0 +1,61 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ComparisonTable from "../../components/ComparisonTable.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { SITE_URL } from "../../lib/site";
+import { MODELS } from "../../data/models";
+import { HOME_PICKS } from "../../data/picks";
+import { getModel } from "../../data/models";
+import { breadcrumbLd, itemListLd, type Crumb } from "../../lib/schema";
+
+const crumbs: Crumb[] = [
+  { name: "Home", href: "/" },
+  { name: "Compare power stations", href: "/power-stations/" },
+];
+const jsonLd = [
+  breadcrumbLd(crumbs),
+  itemListLd("All portable power stations compared", MODELS),
+];
+const picks = HOME_PICKS.map((p) => getModel(p.id));
+---
+
+<BaseLayout
+  title="Compare All Portable Power Stations (2026)"
+  description="Every portable power station we track, compared side by side: capacity, output, solar input, weight and price tier. Sort the table to find your fit."
+  canonical={`${SITE_URL}/power-stations/`}
+  jsonLd={jsonLd}
+>
+  <div class="wrap wide">
+    <Breadcrumbs crumbs={crumbs} />
+    <div class="calc-hero">
+      <h1>Compare all {MODELS.length} power stations</h1>
+      <p>
+        Every station in our database, side by side. <strong>Capacity (Wh)</strong> decides how long
+        things run; <strong>output (W)</strong> decides what can run at once. Click a column header
+        to sort, or jump to a full review.
+      </p>
+    </div>
+
+    <ComparisonTable models={MODELS} sortable caption="All tracked portable power stations" />
+
+    <section aria-label="Top picks">
+      <div class="section-head"><h2 class="section-title">Our top picks</h2></div>
+      <div class="card-grid">
+        {picks.map((m, i) => <ProductCard model={m} compact rank={i + 1} featured={i === 0} />)}
+      </div>
+    </section>
+
+    <section class="strip" aria-label="Not sure where to start">
+      <h2>Not sure what size you need?</h2>
+      <p>
+        Two numbers decide the purchase: how many watt-hours your loads need, and how many watts
+        your biggest appliance draws. Our calculators do the math in under a minute.
+      </p>
+      <p>
+        <a class="btn btn-lg" href="/tools/rv-sizer/">Size my setup</a>
+        <a class="btn secondary btn-lg" href="/tools/solar-pairing/">Pair solar panels</a>
+      </p>
+    </section>
+  </div>
+</BaseLayout>

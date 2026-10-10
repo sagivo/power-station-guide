@@ -1,0 +1,140 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { MODELS } from "../../data/models";
+import { amazonLink } from "../../lib/amazon";
+import { SITE_URL } from "../../lib/site";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { breadcrumbLd } from "../../lib/schema";
+
+const title = "Solar Pairing Calculator — Panels + Power Station Recharge Time";
+const description =
+  "Pick a power station, set your solar panel wattage and sun hours, and see real recharge times — plus whether your panels exceed the station's solar input limit.";
+const url = `${SITE_URL}/tools/solar-pairing/`;
+
+const crumbs = [
+  { name: "Home", href: "/" },
+  { name: "Tools", href: "/tools/" },
+  { name: "Solar pairing", href: "/tools/solar-pairing/" },
+];
+const jsonLd = [breadcrumbLd(crumbs)];
+
+const modelsJson = JSON.stringify(
+  MODELS.map((m) => ({
+    id: m.id,
+    name: m.name,
+    shortName: m.shortName,
+    capacityWh: m.capacityWh,
+    solarInputW: m.solarInputW,
+    link: amazonLink(m.query, m.asin),
+  }))
+);
+---
+
+<BaseLayout title={title} description={description} canonical={url} jsonLd={jsonLd}>
+  <div class="wrap">
+    <Breadcrumbs crumbs={crumbs} />
+    <div class="calc-hero">
+      <h1>Solar pairing calculator</h1>
+      <p>
+        Solar panels rarely deliver their label wattage. Set your real panel watts and peak sun
+        hours — we'll show how long each station takes to recharge, and flag when your array
+        exceeds what the station can accept.
+      </p>
+    </div>
+
+    <div class="calc" id="solar-calc">
+      <div class="calc-controls">
+        <label for="model">Power station
+          <select id="model">
+            {MODELS.map((m) => <option value={m.id}>{m.name} — {m.capacityWh.toLocaleString()}Wh</option>)}
+          </select>
+        </label>
+        <label for="panels">Solar array size <output id="panels-out">800W</output></label>
+        <input id="panels" type="range" min="100" max="2600" step="50" value="800" />
+        <label for="sun">Peak sun hours per day <output id="sun-out">5h</output></label>
+        <input id="sun" type="range" min="2" max="8" step="0.5" value="5" />
+        <p class="fineprint">We derate panels to 75% of label watts — realistic for heat, angle and haze.</p>
+      </div>
+
+      <div class="calc-results">
+        <div class="result-cards">
+          <div class="result-card">
+            <span class="rc-label">Effective charge rate</span>
+            <strong id="eff-rate">–</strong>
+          </div>
+          <div class="result-card">
+            <span class="rc-label">0 → 100% recharge</span>
+            <strong id="full-time">–</strong>
+          </div>
+          <div class="result-card">
+            <span class="rc-label">Daily solar harvest</span>
+            <strong id="harvest">–</strong>
+          </div>
+        </div>
+        <div id="clip-note"></div>
+        <h2>Full recharge time for every station</h2>
+        <div id="all-times" class="match-list"></div>
+      </div>
+    </div>
+
+    <section class="faq" aria-label="Frequently asked questions">
+      <h2>Solar pairing questions</h2>
+      <details><summary>Can I use third-party solar panels with any power station?</summary>
+        <p>Usually yes, if the panel's open-circuit voltage (Voc) stays within the station's solar input range and you have the right adapter (usually MC4 to the station's plug). The BLUETTI AC200L's wide 12–145V range is the most forgiving; the DJI Power 1000 needs DJI's add-on MPPT module.</p>
+      </details>
+      <details><summary>How many watts of solar do I need?</summary>
+        <p>Rule of thumb: size the array so one good solar day refills a day's use. For a 2kWh station used daily, 800–1,200W of panels with 5 sun hours gets you there. Bigger arrays only help up to the station's solar input cap — extra watts are clipped.</p>
+      </details>
+      <details><summary>Why is my solar charging slower than the label?</summary>
+        <p>Heat, suboptimal angle, haze, partial shade and cable losses all cut output. 70–80% of label wattage in real conditions is normal, which is why this calculator derates to 75%.</p>
+      </details>
+    </section>
+  </div>
+
+  <script define:vars={{ modelsJson }}>
+    const MODELS = JSON.parse(modelsJson);
+    const modelSel = document.getElementById("model");
+    const panels = document.getElementById("panels");
+    const sun = document.getElementById("sun");
+
+    function fmtHours(h) {
+      if (!isFinite(h)) return "–";
+      const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+      return hh > 0 ? `${hh}h ${mm}m` : `${mm}m`;
+    }
+
+    function compute() {
+      const m = MODELS.find((x) => x.id === modelSel.value);
+      const arrayW = parseFloat(panels.value);
+      const sunH = parseFloat(sun.value);
+      document.getElementById("panels-out").textContent = arrayW.toLocaleString() + "W";
+      document.getElementById("sun-out").textContent = sunH + "h";
+
+      const effective = Math.min(arrayW * 0.75, m.solarInputW);
+      const fullH = m.capacityWh / effective;
+      document.getElementById("eff-rate").textContent = Math.round(effective) + "W";
+      document.getElementById("full-time").textContent = fmtHours(fullH);
+      document.getElementById("harvest").textContent = Math.round(effective * sunH).toLocaleString() + "Wh";
+
+      const clip = document.getElementById("clip-note");
+      clip.innerHTML = arrayW * 0.75 > m.solarInputW
+        ? `<p class="warn">⚠️ Your array can deliver ~${Math.round(arrayW * 0.75).toLocaleString()}W but the ${m.shortName} caps solar input at ${m.solarInputW.toLocaleString()}W — the extra is wasted. Size down the array or pick a station with a bigger MPPT.</p>`
+        : `<p class="ok">✓ Array and station are well matched — the ${m.shortName} can use everything your panels produce.</p>`;
+
+      document.getElementById("all-times").innerHTML = [...MODELS]
+        .sort((a, b) => a.capacityWh / Math.min(arrayW * 0.75, a.solarInputW) - b.capacityWh / Math.min(arrayW * 0.75, b.solarInputW))
+        .map((x) => {
+          const eff = Math.min(arrayW * 0.75, x.solarInputW);
+          return `<div class="match-row">
+            <div class="match-main">
+              <a href="/power-stations/${x.id}/"><strong>${x.name}</strong></a>
+              <span>${x.capacityWh.toLocaleString()}Wh · ${x.solarInputW.toLocaleString()}W max solar in</span>
+            </div>
+            <strong class="match-time">${fmtHours(x.capacityWh / eff)}</strong>
+          </div>`;
+        }).join("");
+    }
+    [modelSel, panels, sun].forEach((el) => el.addEventListener("input", compute));
+    compute();
+  </script>
+</BaseLayout>

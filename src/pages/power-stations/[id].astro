@@ -1,0 +1,146 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import BuyButton from "../../components/BuyButton.astro";
+import ProductImage from "../../components/ProductImage.astro";
+import { AFFILIATE_REL, amazonLink, tagAmazonUrl } from "../../lib/amazon";
+import ProductCard from "../../components/ProductCard.astro";
+import PostCard from "../../components/PostCard.astro";
+import StickyCta from "../../components/StickyCta.astro";
+import { MODELS, formatWh, type StationModel } from "../../data/models";
+import PriceTier from "../../components/PriceTier.astro";
+import { SITE_NAME, SITE_URL } from "../../lib/site";
+import { getPosts } from "../../lib/posts";
+import { breadcrumbLd, faqLd, productLd, type Crumb } from "../../lib/schema";
+
+export async function getStaticPaths() {
+  const reviews = await getCollection("reviews");
+  const posts = await getPosts();
+  return MODELS.map((model) => ({
+    params: { id: model.id },
+    props: { model, review: reviews.find((r) => r.id === model.id), posts },
+  }));
+}
+
+const { model: m, review, posts } = Astro.props as {
+  model: StationModel;
+  review: Awaited<ReturnType<typeof getCollection<"reviews">>>[number] | undefined;
+  posts: Awaited<ReturnType<typeof getPosts>>;
+};
+const Body = review ? (await render(review)).Content : null;
+const url = `${SITE_URL}/power-stations/${m.id}/`;
+const ogImage = `${SITE_URL}/og/power-stations/${m.id}.png`;
+const updated = review?.data.updatedDate ?? new Date("2026-10-10");
+const fmtDate = (x: Date) => x.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+
+// Alternatives: closest in capacity among other models, preferring another brand.
+const alternatives = MODELS.filter((x) => x.id !== m.id)
+  .map((x) => ({
+    x,
+    d: Math.abs(Math.log(x.capacityWh / m.capacityWh)) + (x.brand === m.brand ? 0.6 : 0) + Math.abs(x.priceLow - m.priceLow) / 2000,
+  }))
+  .sort((a, b) => a.d - b.d)
+  .slice(0, 3)
+  .map((a) => a.x);
+
+const mentionedIn = posts.filter((p) => p.data.picks?.some((pk) => pk.id === m.id)).slice(0, 4);
+
+// SEO title and description sized for search results.
+const titleName = m.shortName.toLowerCase().startsWith(m.brand.toLowerCase()) ? m.shortName : `${m.brand} ${m.shortName}`;
+const longTitle = `${titleName} Review (2026): Specs, Pros & Cons`;
+const title = longTitle.length <= 58 ? longTitle : `${titleName} Review (2026)`;
+const description = `${titleName} review: ${formatWh(m.capacityWh)}, ${m.outputW.toLocaleString("en-US")}W output, ${m.solarInputW.toLocaleString("en-US")}W solar input. Pros, cons, alternatives and our verdict.`;
+
+const crumbs: Crumb[] = [
+  { name: "Home", href: "/" },
+  { name: "Compare power stations", href: "/power-stations/" },
+  { name: m.name, href: `/power-stations/${m.id}/` },
+];
+const jsonLd: Record<string, unknown>[] = [productLd(m, url, updated, ogImage), breadcrumbLd(crumbs)];
+if (review?.data.faq?.length) jsonLd.push(faqLd(review.data.faq));
+
+const specs: [string, string][] = [
+  ["Brand", m.brand],
+  ["Released", String(m.releaseYear)],
+  ["Capacity", formatWh(m.capacityWh)],
+  ["Continuous output", `${m.outputW.toLocaleString("en-US")}W`],
+  ["Surge output", `${m.surgeW.toLocaleString("en-US")}W`],
+  ["Battery", `${m.batteryType}${m.cycleCount ? `, ${m.cycleCount.toLocaleString("en-US")} cycles to 80%` : ""}`],
+  ["Max solar input", `${m.solarInputW.toLocaleString("en-US")}W`],
+  ["AC recharge", m.rechargeTime],
+  ["Weight", `${m.weightLb} lb`],
+  ...(m.expandableWh ? [["Expandable to", formatWh(m.expandableWh)] as [string, string]] : []),
+  ...(m.upsMs ? [["UPS switchover", `${m.upsMs}ms`] as [string, string]] : []),
+];
+---
+
+<BaseLayout title={title} description={description} canonical={url} ogImage={ogImage} jsonLd={jsonLd}>
+  <div class="wrap">
+    <Breadcrumbs crumbs={crumbs} />
+    <article class="review">
+      <header class="review-head">
+        <div class="rh-media"><ProductImage model={m} size={220} eager /></div>
+        <div class="rh-main">
+          <p class="kicker">{m.brand} · {formatWh(m.capacityWh)} · {m.outputW.toLocaleString("en-US")}W</p>
+          <h1>{m.name}: full review</h1>
+          <p class="lede">{m.verdict}</p>
+          <p class="best-for"><strong>Best for:</strong> {m.bestFor}</p>
+          <div class="rh-actions">
+            <BuyButton model={m} size="lg" />
+            <span class="rh-price"><PriceTier model={m} /></span>
+          </div>
+          <p class="updated">Specs verified against manufacturer and retailer listings · Updated {fmtDate(updated)}</p>
+        </div>
+      </header>
+
+      {Body && <div class="prose"><Body /></div>}
+
+      <section class="specs" aria-label="Specifications">
+        <h2>Specifications</h2>
+        <dl class="spec-table">
+          {specs.map(([k, v]) => (
+            <div class="spec-row"><dt>{k}</dt><dd>{v}</dd></div>
+          ))}
+        </dl>
+        {m.specNotes && (
+          <ul class="spec-notes">
+            {m.specNotes.map((n) => <li>{n}</li>)}
+          </ul>
+        )}
+        <p class="fineprint">
+          Specs and street prices compiled October 2026 from manufacturer pages and dated retailer
+          listings — prices move weekly, so <a href={tagAmazonUrl(amazonLink(m.query, m.asin))} rel={AFFILIATE_REL} target="_blank">check the current price on Amazon</a> before buying.
+        </p>
+      </section>
+
+      <section class="proscons" aria-label="Pros and cons">
+        <div class="pc-col">
+          <h2>What we like</h2>
+          <ul class="pros">{m.pros.map((p) => <li>{p}</li>)}</ul>
+        </div>
+        <div class="pc-col">
+          <h2>What to watch</h2>
+          <ul class="cons">{m.cons.map((c) => <li>{c}</li>)}</ul>
+        </div>
+      </section>
+
+      <section aria-label="Alternatives">
+        <div class="section-head"><h2 class="section-title">Alternatives to consider</h2></div>
+        <div class="card-grid">
+          {alternatives.map((a) => <ProductCard model={a} compact />)}
+        </div>
+      </section>
+
+      {mentionedIn.length > 0 && (
+        <section aria-label="Mentioned in guides">
+          <div class="section-head"><h2 class="section-title">Featured in our guides</h2></div>
+          <div class="post-grid">{mentionedIn.map((p) => <PostCard post={p} />)}</div>
+        </section>
+      )}
+
+      <p class="back-link"><a href="/power-stations/">← Compare all {MODELS.length} power stations</a></p>
+    </article>
+  </div>
+  <StickyCta model={m} label="Our verdict" />
+</BaseLayout>

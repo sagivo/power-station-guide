@@ -1,0 +1,160 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { MODELS } from "../../data/models";
+import { amazonLink } from "../../lib/amazon";
+import { SITE_URL } from "../../lib/site";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { breadcrumbLd } from "../../lib/schema";
+
+const title = "RV & Vanlife Power Sizer — What Size Power Station Do I Need?";
+const description =
+  "Pick the devices you run in your RV or van, set hours per day, and get the battery size you actually need — with matching portable power stations.";
+const url = `${SITE_URL}/tools/rv-sizer/`;
+
+const crumbs = [
+  { name: "Home", href: "/" },
+  { name: "Tools", href: "/tools/" },
+  { name: "RV power sizer", href: "/tools/rv-sizer/" },
+];
+const jsonLd = [breadcrumbLd(crumbs)];
+
+const modelsJson = JSON.stringify(
+  MODELS.map((m) => ({
+    id: m.id,
+    name: m.name,
+    shortName: m.shortName,
+    capacityWh: m.capacityWh,
+    outputW: m.outputW,
+    weightLb: m.weightLb,
+    priceLow: m.priceLow,
+    bestFor: m.bestFor,
+    link: amazonLink(m.query, m.asin),
+  }))
+);
+
+const DEVICES = [
+  { id: "fridge", name: "12V fridge / cooler", watts: 45, hours: 24, on: true },
+  { id: "lights", name: "LED lights", watts: 20, hours: 5, on: true },
+  { id: "laptop", name: "Laptop", watts: 65, hours: 4, on: true },
+  { id: "phones", name: "Phones + small USB", watts: 20, hours: 3, on: true },
+  { id: "fan", name: "Roof vent fan", watts: 30, hours: 8, on: false },
+  { id: "starlink", name: "Starlink dish", watts: 75, hours: 6, on: false },
+  { id: "tv", name: "TV / projector", watts: 80, hours: 3, on: false },
+  { id: "pump", name: "Water pump", watts: 60, hours: 1, on: false },
+  { id: "cpap", name: "CPAP (no humidifier)", watts: 40, hours: 8, on: false },
+  { id: "microwave", name: "Microwave", watts: 1000, hours: 0.25, on: false },
+  { id: "kettle", name: "Electric kettle", watts: 1200, hours: 0.2, on: false },
+  { id: "cooktop", name: "Induction cooktop", watts: 1500, hours: 0.5, on: false },
+];
+---
+
+<BaseLayout title={title} description={description} canonical={url} jsonLd={jsonLd}>
+  <div class="wrap">
+    <Breadcrumbs crumbs={crumbs} />
+    <div class="calc-hero">
+      <h1>RV & vanlife power sizer</h1>
+      <p>
+        Check the devices you actually run, set hours per day, and we'll total your watt-hours —
+        then show the stations with enough capacity (plus 20% headroom) to cover a full day.
+      </p>
+    </div>
+
+    <div class="calc" id="rv-calc">
+      <fieldset class="device-list">
+        <legend>Your devices</legend>
+        {DEVICES.map((d) => (
+          <div class="device-row" data-device={d.id}>
+            <label class="dev-check">
+              <input type="checkbox" checked={d.on} data-watts={d.watts} />
+              <span class="dev-name">{d.name}</span>
+              <span class="dev-watts">{d.watts}W</span>
+            </label>
+            <label class="dev-hours">
+              <span>hrs/day</span>
+              <input type="number" min="0" max="24" step="0.25" value={d.hours} data-hours />
+            </label>
+          </div>
+        ))}
+      </fieldset>
+
+      <div class="calc-results">
+        <div class="result-cards">
+          <div class="result-card">
+            <span class="rc-label">Daily energy need</span>
+            <strong id="wh-need">–</strong>
+          </div>
+          <div class="result-card">
+            <span class="rc-label">Recommended minimum</span>
+            <strong id="wh-rec">–</strong>
+            <small>+20% headroom</small>
+          </div>
+          <div class="result-card">
+            <span class="rc-label">Peak load to cover</span>
+            <strong id="w-peak">–</strong>
+          </div>
+        </div>
+        <h2>Stations that fit</h2>
+        <div id="matches" class="match-list"></div>
+        <p class="fineprint">
+          Assumes ~85% inverter efficiency is already folded into the 20% headroom. Heating and air
+          conditioning are deliberately excluded — they need 3kWh+ systems; see our
+          <a href="/posts/power-station-vs-generator/">station vs generator guide</a>.
+        </p>
+      </div>
+    </div>
+
+    <section class="faq" aria-label="Frequently asked questions">
+      <h2>RV power sizing questions</h2>
+      <details><summary>How many watt-hours does an RV need per day?</summary>
+        <p>A frugal van setup (fridge, lights, laptop, phones) runs about 1,500–2,000Wh/day — a 1kWh station covers most of a day. Add Starlink, a microwave or induction cooking and you're at 3,000–5,000Wh/day, which means a 2–3kWh station or daily solar top-ups.</p>
+      </details>
+      <details><summary>What size power station runs a 12V fridge?</summary>
+        <p>A typical 12V compressor fridge draws ~45W and cycles roughly half the time, so ~550Wh/day. Any 1kWh station (Anker C1000, EcoFlow DELTA 3 Plus, DJI Power 1000) runs it for a full day with room to spare.</p>
+      </details>
+      <details><summary>Can a portable power station run RV air conditioning?</summary>
+        <p>Briefly. A 13,500 BTU RV AC pulls ~1,500W running and far more at startup — you need 3kWh+ and 3,000W+ of output (Jackery 2000 Plus, EcoFlow DELTA Pro 3) for even a few hours. For real AC runtime, a generator or rooftop solar + big battery bank wins.</p>
+      </details>
+    </section>
+  </div>
+
+  <script define:vars={{ modelsJson }}>
+    const MODELS = JSON.parse(modelsJson);
+    const calc = document.getElementById("rv-calc");
+    const rows = [...calc.querySelectorAll(".device-row")];
+
+    function compute() {
+      let wh = 0, peak = 0;
+      for (const row of rows) {
+        const box = row.querySelector("[data-watts]");
+        if (!box.checked) continue;
+        const w = parseFloat(box.dataset.watts);
+        const h = parseFloat(row.querySelector("[data-hours]").value) || 0;
+        wh += w * h;
+        peak += w;
+      }
+      const need = Math.round(wh);
+      const rec = Math.round(wh * 1.2);
+      document.getElementById("wh-need").textContent = need.toLocaleString() + "Wh";
+      document.getElementById("wh-rec").textContent = rec.toLocaleString() + "Wh";
+      document.getElementById("w-peak").textContent = peak.toLocaleString() + "W";
+
+      const fits = MODELS.filter((m) => m.capacityWh >= rec && m.outputW >= peak)
+        .sort((a, b) => a.priceLow - b.priceLow);
+      const box = document.getElementById("matches");
+      if (!fits.length) {
+        box.innerHTML = `<p class="no-fit">No single station covers ${rec.toLocaleString()}Wh at ${peak.toLocaleString()}W — consider an expandable model (Jackery 2000 Plus, EcoFlow DELTA Pro 3, Anker F3800) with extra batteries, or trim high-wattage devices.</p>`;
+        return;
+      }
+      box.innerHTML = fits.map((m) => `
+        <div class="match-row">
+          <div class="match-main">
+            <a href="/power-stations/${m.id}/"><strong>${m.name}</strong></a>
+            <span>${m.capacityWh.toLocaleString()}Wh · ${m.outputW.toLocaleString()}W · ${m.weightLb} lb</span>
+          </div>
+          <a class="btn btn-sm buy" href="${m.link}" target="_blank" rel="sponsored nofollow noopener">Check price</a>
+        </div>`).join("");
+    }
+    calc.addEventListener("input", compute);
+    compute();
+  </script>
+</BaseLayout>

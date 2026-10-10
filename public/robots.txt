@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://power-station-guide.pages.dev/sitemap-index.xml

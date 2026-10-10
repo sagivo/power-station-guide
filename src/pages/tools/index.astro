@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { SITE_URL } from "../../lib/site";
+import { breadcrumbLd, type Crumb } from "../../lib/schema";
+
+const crumbs: Crumb[] = [
+  { name: "Home", href: "/" },
+  { name: "Tools", href: "/tools/" },
+];
+const tools = [
+  { href: "/tools/rv-sizer/", icon: "🚐", name: "RV & Vanlife Power Sizer", text: "Check off your devices, set hours per day, and get the battery size you actually need — with matching stations.", go: "Size my setup" },
+  { href: "/tools/solar-pairing/", icon: "☀️", name: "Solar Pairing Calculator", text: "Set your panel watts and sun hours to see real recharge times for every station — and spot clipped arrays.", go: "Pair my panels" },
+  { href: "/tools/generator-cost/", icon: "⚖️", name: "Station vs Generator: 5-Year Cost", text: "Fuel, maintenance and upfront cost side by side. Set your outage hours and see which wins over 5 years.", go: "Do the math" },
+  { href: "/power-stations/", icon: "📊", name: "Comparison Chart", text: "Every station side by side: capacity, output, solar input, weight and price. Sortable.", go: "Compare stations" },
+];
+---
+
+<BaseLayout
+  title="Free Power Station Calculators & Tools"
+  description="Free portable power station tools: RV power sizer, solar pairing calculator, station-vs-generator 5-year cost comparison, and a sortable chart of every model."
+  canonical={`${SITE_URL}/tools/`}
+  jsonLd={breadcrumbLd(crumbs)}
+>
+  <div class="wrap wide">
+    <Breadcrumbs crumbs={crumbs} />
+    <div class="calc-hero">
+      <h1>Free power station tools</h1>
+      <p>Turn "which station should I buy?" into numbers. Every tool runs in your browser, and nothing you enter leaves your device.</p>
+    </div>
+    <div class="tool-grid">
+      {tools.map((t) => (
+        <a class="tool-card" href={t.href}>
+          <div class="tool-icon">{t.icon}</div>
+          <h2 class="h3">{t.name}</h2>
+          <p>{t.text}</p>
+          <span class="go">{t.go}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
